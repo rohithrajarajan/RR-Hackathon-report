@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pressure Performers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: scope strip, role tabs, ranking bars beside a detail card, table, scatter, then method. Batters = blue, bowlers = orange, never mixed in one chart. */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --fg:#14181f; --muted:#5a6270; --faint:#8a92a0; --line:#e2e5ea; --soft:#eef0f4;
+  --role:#2a78d6; --role-soft:#e3eefb; --ring:#ffffff;
+  --font-head:'Space Grotesk','Inter',system-ui,sans-serif; --font-body:'Inter',system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151b; --surface:#1a1e26; --fg:#eceef2; --muted:#a6adba; --faint:#7c8493; --line:#2b313c; --soft:#222731;
+  --role:#3987e5; --role-soft:#1c2a3f; --ring:#1a1e26; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#12151b; --surface:#1a1e26; --fg:#eceef2; --muted:#a6adba; --faint:#7c8493; --line:#2b313c; --soft:#222731;
+  --role:#3987e5; --role-soft:#1c2a3f; --ring:#1a1e26; color-scheme:dark;}
+body.bowl{--role:#eb6834;--role-soft:#fbe9e1}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.bowl{--role:#d95926;--role-soft:#3a2219}}
+:root[data-theme="dark"] body.bowl{--role:#d95926;--role-soft:#3a2219}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--font-head);margin:0;text-wrap:balance}
+h1{font-size:30px;letter-spacing:-.02em;line-height:1.15}
+h2{font-size:17px;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:68ch;margin:8px 0 0}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.scope{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.scope div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.scope b{display:block;font-family:var(--font-head);font-size:22px;font-variant-numeric:tabular-nums}
+.scope span{color:var(--muted);font-size:12px}
+.bar-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.tabs{display:inline-flex;background:var(--soft);border-radius:10px;padding:3px;gap:2px}
+.tabs button{border:0;background:transparent;color:var(--muted);font:600 13px var(--font-body);padding:8px 16px;border-radius:8px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.ctrls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.f{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}
+select,input[type=search]{font:13px var(--font-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+:focus-visible{outline:2px solid var(--role);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h2{margin-bottom:4px}
+.note{color:var(--muted);font-size:12px;margin:0 0 12px}
+.rows{display:flex;flex-direction:column;gap:6px}
+.r{display:grid;grid-template-columns:22px minmax(92px,150px) minmax(0,1fr) 62px;gap:10px;align-items:center;background:none;border:0;
+  padding:5px 6px;border-radius:8px;cursor:pointer;text-align:left;color:var(--fg);font:inherit;width:100%}
+.r:hover,.r[aria-pressed="true"]{background:var(--role-soft)}
+.r .rk{color:var(--faint);font-variant-numeric:tabular-nums;font-size:12px}
+.r .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r .tr{height:12px;background:var(--soft);border-radius:0 6px 6px 0;position:relative}
+.r .fl{position:absolute;inset:0 auto 0 0;background:var(--role);border-radius:0 6px 6px 0;transition:width .35s}
+.r .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:480px){.r{grid-template-columns:20px minmax(0,1fr) 56px}.r .tr{grid-column:2/4;grid-row:2}.r .nm{grid-column:2}.r .v{grid-column:3;grid-row:1}}
+.detail h3{font-size:22px;letter-spacing:-.01em}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--role-soft);color:var(--fg);margin-right:4px}
+.pill.warn{background:var(--soft);border:1px solid var(--line)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;margin:14px 0 0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.cmp{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.cmp .l{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.cmp .t{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;margin-top:3px;display:flex}
+.cmp .t i{display:block;height:100%;border-radius:0 4px 4px 0}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
+th[aria-sort]{color:var(--fg)}
+th .ar{display:inline-block;width:10px;color:var(--role)}
+tbody tr{cursor:pointer} tbody tr:hover,tbody tr.sel{background:var(--role-soft)}
+.chart{position:relative}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{fill:var(--muted);font:11px var(--font-body)}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);padding:7px 10px;border-radius:8px;font-size:12px;line-height:1.4;z-index:5;white-space:nowrap;opacity:0;transition:opacity .08s}
+.tip b{display:block}
+.matrix{display:grid;grid-template-columns:70px repeat(3,minmax(0,1fr));gap:2px;max-width:520px}
+.matrix .h{font-size:11px;color:var(--muted);text-align:center;padding:2px 0 6px}
+.matrix .w{font-size:12px;color:var(--muted);display:flex;align-items:center}
+.cell{border:0;border-radius:4px;height:26px;font:600 11px var(--font-body);color:var(--fg);cursor:pointer;background:var(--soft)}
+.cell[data-p="M"]{background:color-mix(in srgb,var(--fg) 20%,var(--surface))}
+.cell[data-p="H"]{background:color-mix(in srgb,var(--fg) 42%,var(--surface));color:var(--bg)}
+.cell[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:1px}
+.verdict{margin-top:14px;font-size:15px}
+.verdict b{font-family:var(--font-head);font-size:20px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.wt{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:4px 10px;align-items:center;margin-top:6px}
+.wt .t{height:8px;background:var(--soft);border-radius:0 4px 4px 0}
+.wt .t i{display:block;height:100%;background:var(--role);border-radius:0 4px 4px 0}
+.wt .n{grid-column:1/-1;font-size:13px}
+.wt .p{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;grid-column:2;grid-row:2}
+.wt .t{grid-column:1;grid-row:2}
+.lim{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.lim b{color:var(--fg);font-weight:600}
+footer{color:var(--faint);font-size:12px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">IPL and T20 Internationals, 2022 onward</div>
+    <h1>Pressure Performers</h1>
+    <p class="sub">The top 10 batters and bowlers ranked on how they perform when their team has lost wickets, compared with how they perform in calm situations.</p>
+  </header>
+
+  <section class="scope" aria-label="Dataset scope">
+    <div><b>853</b><span>matches analysed</span></div>
+    <div><b>371</b><span>IPL matches</span></div>
+    <div><b>482</b><span>T20 International matches</span></div>
+    <div><b>194,014</b><span>ball-by-ball records</span></div>
+    <div><b id="elig">42</b><span id="eligl">batters met the 120-ball minimums</span></div>
+  </section>
+
+  <div class="bar-row">
+    <div class="tabs" role="tablist" aria-label="Role">
+      <button role="tab" id="tab-bat" aria-selected="true">Batters</button>
+      <button role="tab" id="tab-bowl" aria-selected="false">Bowlers</button>
+    </div>
+    <div class="ctrls">
+      <label class="f" for="metric">Rank by <select id="metric"></select></label>
+      <label class="f" for="q"><input id="q" type="search" placeholder="Find a player"></label>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2 id="rank-title">Ranking</h2>
+      <p class="note" id="rank-note"></p>
+      <div class="rows" id="rows"></div>
+    </section>
+    <aside class="card detail" id="detail" aria-live="polite"></aside>
+  </div>
+
+  <section class="card">
+    <h2>Full table</h2>
+    <p class="note">Click a column to sort. Click a row to open that player.</p>
+    <div class="tablewrap"><table id="tbl"></table></div>
+  </section>
+
+  <section class="card">
+    <h2 id="sc-title">Sample size and output</h2>
+    <p class="note" id="sc-note"></p>
+    <div class="chart" id="sc"></div>
+  </section>
+
+  <section class="card">
+    <h2>How pressure is defined</h2>
+    <p class="note">Wickets already lost before the delivery, and the stage of the innings. Click a cell to check any situation.</p>
+    <div class="matrix" id="matrix"></div>
+    <div class="verdict" id="verdict"></div>
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <h2>Batting score weights</h2>
+      <p class="note">Each component is min-max scaled 0 to 100 across the 42 eligible batters.</p>
+      <div id="wb"></div>
+    </section>
+    <section class="card">
+      <h2>Bowling score weights</h2>
+      <p class="note">Scaled the same way across the 93 eligible bowlers. Economy rate is not used because extras are incomplete.</p>
+      <div id="wo"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Read these results with care</h2>
+    <ul class="lim">
+      <li><b>Pressure is an approximation.</b> It ignores target, required run rate, match importance and opposition strength.</li>
+      <li><b>Dot balls are approximate.</b> Byes, leg-byes and other extras cannot be separated reliably.</li>
+      <li><b>Samples differ.</b> A player with 120 balls and one with 600 are not equally well supported. Rishabh Pant (122 balls) sits just above the minimum.</li>
+      <li><b>Weights shape the order.</b> Different weights could change the ranking.</li>
+      <li><b>Not career rankings.</b> They cover only the supplied dataset and do not predict future form.</li>
+    </ul>
+  </section>
+  <footer>Source: Identifying the Best Pressure-Performing Batters and Bowlers in T20 Cricket. Only figures printed in that report are shown.</footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const BAT=[
+ {n:'Tristan Stubbs',b:321,r:609,sr:189.72,s:80.21},
+ {n:'Rinku Singh',b:521,r:972,sr:186.56,s:76.71,dr:5.18},
+ {n:'Rishabh Pant',b:122,r:249,sr:204.10,s:75.85},
+ {n:'Marcus Stoinis',b:252,r:503,sr:199.60,s:74.46},
+ {n:'Naman Dhir',b:199,r:402,sr:202.01,s:74.16},
+ {n:'Shreyas Iyer',b:183,r:366,sr:200.00,s:73.63},
+ {n:'David Miller',b:300,r:537,sr:179.00,s:72.82,dr:5.00},
+ {n:'Suryakumar Yadav',b:209,r:426,sr:203.83,s:71.91},
+ {n:'Tilak Varma',b:405,r:754,sr:186.17,s:71.23},
+ {n:'Jitesh Sharma',b:281,r:533,sr:189.68,s:67.59}
+].map((d,i)=>({...d,rank:i+1}));
+const BOWL=[
+ {n:'Mitchell Starc',b:157,w:22,wr:0.84,s:78.31,lw:0.28},
+ {n:'Kuldeep Yadav',b:333,w:35,wr:0.63,s:72.28,dot:44.14,ldot:30.68},
+ {n:'Jamie Overton',b:159,w:18,wr:0.68,s:70.68,lw:0.31},
+ {n:'Haris Rauf',b:308,w:33,wr:0.64,s:66.61},
+ {n:'Wanindu Hasaranga',b:314,w:32,wr:0.61,s:64.49},
+ {n:'Rashid Khan',b:596,w:58,wr:0.58,s:62.84},
+ {n:'Yuzvendra Chahal',b:356,w:36,wr:0.61,s:62.46},
+ {n:'Sunil Narine',b:216,w:16,wr:0.44,s:60.01,dot:49.07},
+ {n:'Shaheen Afridi',b:277,w:28,wr:0.61,s:60.01},
+ {n:'Gerald Coetzee',b:149,w:16,wr:0.64,s:59.76}
+].map((d,i)=>({...d,rank:i+1}));
+
+const CFG={
+ bat:{data:BAT,els:'42 batters',min:'120 high-pressure balls faced',
+  metrics:{s:{l:'Final score',f:v=>v.toFixed(2),k:'s'},sr:{l:'High-pressure strike rate',f:v=>v.toFixed(1),k:'sr'},b:{l:'High-pressure balls',f:v=>v,k:'b'},r:{l:'High-pressure runs',f:v=>v,k:'r'}},
+  cols:[['rank','#'],['n','Batter'],['b','HP balls'],['r','Runs'],['sr','HP strike rate'],['s','Score']],
+  fmt:{b:v=>v,r:v=>v,sr:v=>v.toFixed(2),s:v=>v.toFixed(2),rank:v=>v},
+  sx:{k:'b',l:'High-pressure balls faced',min:100,max:560},sy:{k:'sr',l:'High-pressure strike rate',min:170,max:210,f:v=>v.toFixed(0)},
+  scT:'Strike rate against sample size',scN:'Higher is faster scoring. Points left of the dashed line are below the 120-ball minimum, so none should appear there; Pant sits right next to it.',
+  weights:[['High-pressure strike rate',40],['High-pressure dismissal rate (lower is better)',25],['Strike-rate gain over low pressure',25],['Sample-size reliability',10]],
+  note:'Score blends strike rate, dismissal rate, improvement under pressure and sample size.'},
+ bowl:{data:BOWL,els:'93 bowlers',min:'120 high-pressure legal balls',
+  metrics:{s:{l:'Final score',f:v=>v.toFixed(2),k:'s'},wr:{l:'Wickets per over (HP)',f:v=>v.toFixed(2),k:'wr'},b:{l:'High-pressure legal balls',f:v=>v,k:'b'},w:{l:'High-pressure wickets',f:v=>v,k:'w'}},
+  cols:[['rank','#'],['n','Bowler'],['b','HP balls'],['w','Wickets'],['wr','HP wkts/6 balls'],['s','Score']],
+  fmt:{b:v=>v,w:v=>v,wr:v=>v.toFixed(2),s:v=>v.toFixed(2),rank:v=>v},
+  sx:{k:'b',l:'High-pressure legal balls',min:100,max:640},sy:{k:'wr',l:'High-pressure wickets per six balls',min:.4,max:.9,f:v=>v.toFixed(1)},
+  scT:'Wicket rate against sample size',scN:'Starc and Overton lead on rate from small samples. Rashid Khan has the largest sample, at 596 balls.',
+  weights:[['High-pressure wicket rate',40],['High-pressure dot-ball percentage',25],['Wicket-rate gain over low pressure',20],['Dot-ball gain over low pressure',10],['Sample-size reliability',5]],
+  note:'Score blends wicket rate, dot-ball control, improvement under pressure and sample size.'}
+};
+
+let role='bat', metric='s', sel=0, sortK='rank', sortDir=1, query='';
+const $=id=>document.getElementById(id), tip=$('tip');
+const cur=()=>CFG[role];
+function visible(){return cur().data.filter(d=>d.n.toLowerCase().includes(query.toLowerCase()))}
+
+function setRole(r){
+  role=r; metric='s'; sel=0; sortK='rank'; sortDir=1;
+  document.body.classList.toggle('bowl',r==='bowl');
+  $('tab-bat').setAttribute('aria-selected',r==='bat'); $('tab-bowl').setAttribute('aria-selected',r==='bowl');
+  $('elig').textContent=r==='bat'?'42':'93';
+  $('eligl').textContent=(r==='bat'?'batters':'bowlers')+' met the 120-ball minimums';
+  const m=$('metric'); m.innerHTML='';
+  for(const k in cur().metrics){const o=document.createElement('option');o.value=k;o.textContent=cur().metrics[k].l;m.appendChild(o)}
+  m.value='s'; renderAll();
+}
+
+function renderRank(){
+  const c=cur(), M=c.metrics[metric];
+  const list=visible().slice().sort((a,b)=>b[M.k]-a[M.k]);
+  const max=Math.max(...c.data.map(d=>d[M.k]));
+  $('rank-title').textContent='Top 10 by '+M.l.toLowerCase();
+  $('rank-note').textContent=c.note;
+  const box=$('rows'); box.innerHTML='';
+  if(!list.length){box.innerHTML='<p class="note">No player matches that search.</p>';return}
+  list.forEach((d,i)=>{
+    const b=document.createElement('button'); b.className='r'; b.setAttribute('aria-pressed',d.rank-1===sel);
+    b.innerHTML=`<span class="rk">${i+1}</span><span class="nm">${d.n}</span><span class="tr"><span class="fl" style="width:${(d[M.k]/max*100).toFixed(1)}%"></span></span><span class="v">${M.f(d[M.k])}</span>`;
+    b.onclick=()=>{sel=d.rank-1;renderRank();renderDetail();renderTable();renderScatter()};
+    b.onmousemove=e=>showTip(e,d); b.onmouseleave=hideTip;
+    box.appendChild(b);
+  });
+}
+
+function tipHTML(d){
+  return role==='bat'
+   ? `<b>${d.n}</b>${d.b} balls, ${d.r} runs<br>Strike rate ${d.sr.toFixed(2)} · Score ${d.s.toFixed(2)}`
+   : `<b>${d.n}</b>${d.b} balls, ${d.w} wickets<br>${d.wr.toFixed(2)} wkts per 6 balls · Score ${d.s.toFixed(2)}`;
+}
+function showTip(e,d){
+  tip.innerHTML=tipHTML(d); tip.style.opacity=1;
+  const w=tip.offsetWidth, x=Math.min(e.pageX+14, document.documentElement.clientWidth-w-8);
+  tip.style.left=Math.max(8,x)+'px'; tip.style.top=(e.pageY+16)+'px';
+}
+function hideTip(){tip.style.opacity=0}
+
+function renderDetail(){
+  const d=cur().data[sel], box=$('detail');
+  let h=`<div class="eyebrow">Rank ${d.rank} of 10</div><h3>${d.n}</h3><div style="margin-top:6px"><span class="pill">Score ${d.s.toFixed(2)}</span>`;
+  if(d.b<160) h+=`<span class="pill warn">Small sample</span>`;
+  if(d.b>=500) h+=`<span class="pill warn">Largest sample</span>`;
+  h+=`</div><dl class="kv">`;
+  if(role==='bat'){
+    h+=`<dt>High-pressure balls</dt><dd>${d.b}</dd><dt>High-pressure runs</dt><dd>${d.r}</dd><dt>High-pressure strike rate</dt><dd>${d.sr.toFixed(2)}</dd>`;
+    if(d.dr!=null) h+=`<dt>Dismissals per 100 balls</dt><dd>${d.dr.toFixed(2)}</dd>`;
+  } else {
+    h+=`<dt>High-pressure legal balls</dt><dd>${d.b}</dd><dt>Wickets</dt><dd>${d.w}</dd><dt>Wickets per 6 balls</dt><dd>${d.wr.toFixed(2)}</dd>`;
+    if(d.lw!=null) h+=`<dt>Low-pressure wickets per 6 balls</dt><dd>${d.lw.toFixed(2)}</dd>`;
+  }
+  h+=`</dl>`;
+  if(role==='bowl' && d.lw!=null){
+    const mx=Math.max(d.wr,d.lw)*1.05;
+    h+=`<div class="cmp"><div><div class="l"><span>High pressure</span><span>${d.wr.toFixed(2)}</span></div><div class="t"><i style="width:${d.wr/mx*100}%;background:var(--role)"></i></div></div>
+    <div><div class="l"><span>Low pressure</span><span>${d.lw.toFixed(2)}</span></div><div class="t"><i style="width:${d.lw/mx*100}%;background:var(--faint)"></i></div></div></div>`;
+  }
+  if(d.dot!=null){
+    h+=`<div class="cmp"><div><div class="l"><span>Dot balls, high pressure</span><span>${d.dot.toFixed(2)}%</span></div><div class="t"><i style="width:${d.dot}%;background:var(--role)"></i></div></div>`;
+    if(d.ldot!=null) h+=`<div><div class="l"><span>Dot balls, low pressure</span><span>${d.ldot.toFixed(2)}%</span></div><div class="t"><i style="width:${d.ldot}%;background:var(--faint)"></i></div></div>`;
+    h+=`</div>`;
+  }
+  const notes={ 'Tristan Stubbs':'Top batter. Strong scoring rate and a clear gain over his low-pressure rate.',
+   'Rinku Singh':'Largest batting sample in the top 10, with a relatively low dismissal rate.',
+   'Rishabh Pant':'Highest strike rate in the top 10, but from a sample close to the 120-ball minimum.',
+   'David Miller':'Lowest dismissal rate in the top 10, so he scores quickly and stays in.',
+   'Mitchell Starc':'Wicket rate far above his low-pressure rate. His dot-ball share was lower under pressure, yet he still ranks first.',
+   'Kuldeep Yadav':'Strong on both wickets and dot balls.',
+   'Jamie Overton':'Wicket rate more than doubled under pressure, and his dot-ball share also improved.',
+   'Rashid Khan':'Largest bowling sample in the top 10, 596 balls and 58 wickets.',
+   'Sunil Narine':'Highest dot-ball share in the top 10.'};
+  if(notes[d.n]) h+=`<p class="note" style="margin-top:14px">${notes[d.n]}</p>`;
+  box.innerHTML=h;
+}
+
+function renderTable(){
+  const c=cur(), rows=visible().slice().sort((a,b)=>{
+    const x=a[sortK],y=b[sortK];
+    return (typeof x==='string'?x.localeCompare(y):x-y)*sortDir;
+  });
+  let h='<thead><tr>';
+  c.cols.forEach(([k,l])=>{
+    const on=sortK===k;
+    h+=`<th data-k="${k}" ${on?`aria-sort="${sortDir>0?'ascending':'descending'}"`:''} tabindex="0">${l}<span class="ar">${on?(sortDir>0?'▲':'▼'):''}</span></th>`;
+  });
+  h+='</tr></thead><tbody>';
+  rows.forEach(d=>{
+    h+=`<tr data-i="${d.rank-1}" class="${d.rank-1===sel?'sel':''}">`+c.cols.map(([k])=>`<td>${k==='n'?d.n:c.fmt[k](d[k])}</td>`).join('')+'</tr>';
+  });
+  $('tbl').innerHTML=h+'</tbody>';
+  $('tbl').querySelectorAll('th').forEach(th=>{
+    const go=()=>{const k=th.dataset.k; if(sortK===k) sortDir*=-1; else {sortK=k; sortDir=k==='n'||k==='rank'?1:-1} renderTable()};
+    th.onclick=go; th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+  });
+  $('tbl').querySelectorAll('tbody tr').forEach(tr=>tr.onclick=()=>{sel=+tr.dataset.i;renderRank();renderDetail();renderTable();renderScatter()});
+}
+
+function renderScatter(){
+  const c=cur(), W=720,H=340,L=52,R=16,T=14,B=44, pw=W-L-R, ph=H-T-B;
+  const X=v=>L+(v-c.sx.min)/(c.sx.max-c.sx.min)*pw, Y=v=>T+ph-(v-c.sy.min)/(c.sy.max-c.sy.min)*ph;
+  $('sc-title').textContent=c.scT; $('sc-note').textContent=c.scN;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${c.scT}">`;
+  for(let i=0;i<=4;i++){const v=c.sy.min+(c.sy.max-c.sy.min)*i/4; s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${c.sy.f(v)}</text>`}
+  for(let i=0;i<=4;i++){const v=c.sx.min+(c.sx.max-c.sx.min)*i/4; s+=`<text x="${X(v)}" y="${H-B+18}" text-anchor="middle">${Math.round(v)}</text>`}
+  s+=`<line x1="${X(120)}" x2="${X(120)}" y1="${T}" y2="${T+ph}" stroke="var(--faint)" stroke-dasharray="4 4"/><text x="${X(120)+6}" y="${T+12}">120-ball minimum</text>`;
+  s+=`<text x="${L+pw/2}" y="${H-6}" text-anchor="middle">${c.sx.l}</text>`;
+  s+=`<text transform="translate(12 ${T+ph/2}) rotate(-90)" text-anchor="middle">${c.sy.l}</text>`;
+  c.data.forEach((d,i)=>{
+    const on=i===sel, x=X(d[c.sx.k]), y=Y(d[c.sy.k]);
+    s+=`<circle data-i="${i}" cx="${x}" cy="${y}" r="${on?9:6.5}" fill="var(--role)" fill-opacity="${on?1:.8}" stroke="var(--ring)" stroke-width="2" style="cursor:pointer"/>`;
+    if(on) s+=`<text x="${x}" y="${y-14}" text-anchor="middle" style="fill:var(--fg);font-weight:600">${d.n}</text>`;
+  });
+  s+='</svg>';
+  const el=$('sc'); el.innerHTML=s;
+  el.querySelectorAll('circle').forEach(ci=>{
+    const d=c.data[+ci.dataset.i];
+    ci.onmousemove=e=>showTip(e,d); ci.onmouseleave=hideTip;
+    ci.onclick=()=>{sel=+ci.dataset.i;renderRank();renderDetail();renderTable();renderScatter()};
+  });
+}
+
+function renderWeights(){
+  for(const [id,r] of [['wb','bat'],['wo','bowl']]){
+    const box=$(id); const c=CFG[r];
+    box.innerHTML=c.weights.map(([n,p])=>`<div class="wt"><span class="n">${n}</span><span class="t"><i style="width:${p/40*100}%;${r==='bowl'?'background:#eb6834':'background:#2a78d6'}"></i></span><span class="p">${p}%</span></div>`).join('');
+  }
+}
+
+/* pressure matrix */
+const STAGES=[['Powerplay','Overs 1–6',false],['Middle','Overs 7–15',false],['Death','Overs 16–20',true]];
+function pressure(w,death){
+  if(w>=6||(death&&w>=4)) return 'H';
+  if((w>=4&&w<=5)||(death&&w>=2&&w<=3)) return 'M';
+  return 'L';
+}
+let mSel=[7,2];
+function renderMatrix(){
+  const box=$('matrix'); let h='<div></div>'+STAGES.map(s=>`<div class="h">${s[0]}<br>${s[1]}</div>`).join('');
+  for(let w=9;w>=0;w--){
+    h+=`<div class="w">${w} down</div>`;
+    STAGES.forEach((s,j)=>{const p=pressure(w,s[2]);h+=`<button class="cell" data-p="${p}" data-w="${w}" data-j="${j}" aria-pressed="${mSel[0]===w&&mSel[1]===j}" aria-label="${w} wickets down, ${s[0]}: ${p==='H'?'high':p==='M'?'medium':'low'} pressure">${p}</button>`});
+  }
+  box.innerHTML=h;
+  box.querySelectorAll('.cell').forEach(b=>b.onclick=()=>{mSel=[+b.dataset.w,+b.dataset.j];renderMatrix()});
+  const p=pressure(mSel[0],STAGES[mSel[1]][2]), name={H:'High',M:'Medium',L:'Low'}[p];
+  $('verdict').innerHTML=`<b>${name} pressure</b><br><span style="color:var(--muted)">${mSel[0]} wickets already lost in the ${STAGES[mSel[1]][0].toLowerCase()} overs (${STAGES[mSel[1]][1].toLowerCase()}). Wickets are counted before the delivery.</span>`;
+}
+
+$('tab-bat').onclick=()=>setRole('bat'); $('tab-bowl').onclick=()=>setRole('bowl');
+$('metric').onchange=e=>{metric=e.target.value;renderRank()};
+$('q').oninput=e=>{query=e.target.value;renderRank();renderTable()};
+function renderAll(){renderRank();renderDetail();renderTable();renderScatter()}
+renderWeights(); renderMatrix(); setRole('bat');
+</script>
+
+</html>
